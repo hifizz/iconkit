@@ -28,15 +28,16 @@ export function normalizeSvg(
     if (w) viewBox = Number(w[1]) || 24
   }
 
-  // detect paint from the root <svg ...> attributes before stripping it
-  const openTag = raw.match(/<svg[^>]*>/i)?.[0] ?? ""
+  // Detect paint mode. Scan the whole SVG (not just the root tag) because many
+  // sets put the stroke attrs on an inner <g> (e.g. Iconify). Stroke icons pair
+  // fill:none with a stroke; everything else is treated as filled.
   let paint: "stroke" | "fill"
   if (paintHint) {
     paint = paintHint
   } else {
-    const hasNoneFill = /fill\s*=\s*["']none["']/i.test(openTag)
-    const hasStroke = /stroke\s*=\s*["'](?!none)/i.test(openTag)
-    paint = hasNoneFill || hasStroke ? "stroke" : "fill"
+    const hasNoneFill = /fill\s*=\s*["']none["']/i.test(raw)
+    const hasStroke = /stroke\s*=\s*["'](?!none)/i.test(raw) || /stroke-width/i.test(raw)
+    paint = hasNoneFill && hasStroke ? "stroke" : "fill"
   }
 
   // inner = between the opening <svg ...> and closing </svg>

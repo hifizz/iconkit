@@ -37,6 +37,18 @@
 
 **验收**：`pnpm test`(39 通过) · `typecheck` · `build` 均通过；浏览器端到端零控制台错误。
 
+## ✅ M3.1 — 更多图标源（已完成）
+
+- [x] 通用 currentColor 支持：`normalizeSvg` 全文扫描判定 stroke/fill；`buildMasterSVG`
+      在字形组上加 `color`，让内部 `currentColor`（Iconify/Feather 等）解析为图标色
+- [x] **Feather**（286，24 stroke）：jsDelivr CDN，复用 CDN_LIBS
+- [x] **Iconify**（20 万+ 聚合）：搜索式 provider，search API + svg 缩略图 + 按需 normalize
+- [x] **Untitled UI**（1179，24 stroke）：解析 `index.mjs` 取名、按需解析 `{Name}.mjs` 路径数据；
+      无 SVG 端点 → 缩略图内联渲染（IntersectionObserver 懒加载）
+- [x] provider 抽象统一多源；`searchNames` 大小写不敏感（修复 PascalCase 搜索）
+- [x] 修复切库瞬间「旧库名错配新库 URL」导致的 404（names 按 provider 归属隔离）
+- [x] 单测：iconifyUrl / parseUntitledComponent / searchNames；浏览器 E2E 七库切换 + 导出，零 404 零控制台错误
+
 ## 留作 M4（锦上添花，本轮不做）
 
 - 框架感知配套代码（Next.js App Router 文件约定、Vite 专属说明）

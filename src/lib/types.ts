@@ -1,7 +1,15 @@
 // Central state object. Every panel reads/writes this; the canvas and all export
 // artifacts are pure derivations of it (see prd.md §5).
 
-export type IconLib = "lucide" | "tabler" | "phosphor" | "simple" | "upload"
+export type IconLib =
+  | "lucide"
+  | "tabler"
+  | "phosphor"
+  | "simple"
+  | "feather"
+  | "iconify"
+  | "untitled"
+  | "upload"
 export type FillType = "linear" | "radial" | "solid"
 export type BackgroundShape = "rounded" | "squircle"
 

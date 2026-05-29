@@ -96,14 +96,15 @@ export function buildMasterSVG(state: IconState): string {
     )
   }
   // glyph: stroke icons paint with stroke (width:2 inside the scaled group so it
-  // scales with the glyph); filled/brand icons paint with fill.
+  // scales with the glyph); filled/brand icons paint with fill. `color` is set
+  // so any internal `currentColor` (Iconify/Feather/etc.) resolves to icon.color.
   const glyphPaint =
     iconSource.paint === "fill"
       ? `fill="${icon.color}"`
       : `fill="none" stroke="${icon.color}" stroke-width="2" ` +
         `stroke-linecap="round" stroke-linejoin="round"`
   layers.push(
-    `<g transform="translate(${tx} ${ty}) scale(${scale})" ${glyphPaint}>${iconSource.svg}</g>`,
+    `<g transform="translate(${tx} ${ty}) scale(${scale})" color="${icon.color}" ${glyphPaint}>${iconSource.svg}</g>`,
   )
 
   return (

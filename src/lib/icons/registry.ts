@@ -1,6 +1,6 @@
 import { normalizeSvg, type NormalizedGlyph } from "./normalize"
 
-export type CdnLibId = "tabler" | "phosphor" | "simple"
+export type CdnLibId = "tabler" | "phosphor" | "simple" | "feather"
 
 type LibConfig = {
   id: CdnLibId
@@ -36,6 +36,14 @@ export const CDN_LIBS: Record<CdnLibId, LibConfig> = {
     version: "16.21.0",
     dir: "/icons/",
     paint: "fill",
+  },
+  feather: {
+    id: "feather",
+    label: "Feather",
+    pkg: "feather-icons",
+    version: "4.29.2",
+    dir: "/dist/icons/",
+    paint: "stroke",
   },
 }
 
@@ -134,7 +142,7 @@ export function searchNames(names: string[], query: string, limit = 120): string
   if (!q) return names.slice(0, limit)
   const out: string[] = []
   for (const n of names) {
-    if (n.includes(q)) {
+    if (n.toLowerCase().includes(q)) {
       out.push(n)
       if (out.length >= limit) break
     }

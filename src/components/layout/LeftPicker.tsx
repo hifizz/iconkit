@@ -4,15 +4,9 @@ import { DynamicIcon } from "lucide-react/dynamic"
 
 import { Input } from "@/components/ui/input"
 import { loadLucideGlyph, searchLucide } from "@/lib/icons/lucide"
-import { sanitizeUploadedSvg, normalizeSvg } from "@/lib/icons/normalize"
-import {
-  fetchLibNames,
-  getCachedNames,
-  loadCdnGlyph,
-  searchNames,
-  svgUrl,
-  type CdnLibId,
-} from "@/lib/icons/registry"
+import { normalizeSvg, sanitizeUploadedSvg, type NormalizedGlyph } from "@/lib/icons/normalize"
+import { PROVIDERS, type Provider, type ProviderId } from "@/lib/icons/providers"
+import { searchNames } from "@/lib/icons/registry"
 import type { IconLib } from "@/lib/types"
 import { cn } from "@/lib/utils"
 import { usePatch, useIconState } from "@/state/iconStore"
@@ -21,11 +15,71 @@ const LIBS: { id: IconLib; label: string }[] = [
   { id: "lucide", label: "Lucide" },
   { id: "tabler", label: "Tabler" },
   { id: "phosphor", label: "Phosphor" },
+  { id: "feather", label: "Feather" },
   { id: "simple", label: "Simple" },
+  { id: "untitled", label: "Untitled UI" },
+  { id: "iconify", label: "Iconify" },
   { id: "upload", label: "SVG" },
 ]
 
 const MAX_UPLOAD_BYTES = 100 * 1024
+
+/** Inline SVG markup for a thumbnail rendered from a parsed glyph (no img URL). */
+function inlineThumb(g: NormalizedGlyph): string {
+  const paint =
+    g.paint === "fill"
+      ? 'fill="currentColor"'
+      : 'fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"'
+  return `<svg viewBox="0 0 ${g.viewBox} ${g.viewBox}" width="16" height="16" ${paint}>${g.svg}</svg>`
+}
+
+function IconThumb({ provider, name }: { provider: Provider; name: string }) {
+  const url = provider.thumbUrl(name)
+  const [inner, setInner] = useState<string | null>(null)
+  const ref = useRef<HTMLSpanElement>(null)
+
+  // Inline thumbnails (no URL, e.g. Untitled UI) must fetch + parse their source,
+  // so only load them once scrolled into view to avoid a fetch storm.
+  useEffect(() => {
+    if (url) return
+    const el = ref.current
+    if (!el) return
+    let cancelled = false
+    const load = () => {
+      provider
+        .loadGlyph(name)
+        .then((g) => !cancelled && setInner(inlineThumb(g)))
+        .catch(() => {})
+    }
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          io.disconnect()
+          load()
+        }
+      },
+      { root: el.closest("[data-grid-scroll]"), rootMargin: "200px" },
+    )
+    io.observe(el)
+    return () => {
+      cancelled = true
+      io.disconnect()
+    }
+  }, [provider, name, url])
+
+  if (url) {
+    return (
+      <img src={url} alt={name} loading="lazy" className="size-4 dark:invert" />
+    )
+  }
+  return (
+    <span
+      ref={ref}
+      className="flex size-4 text-foreground [&_svg]:size-4"
+      dangerouslySetInnerHTML={inner ? { __html: inner } : undefined}
+    />
+  )
+}
 
 export function LeftPicker() {
   const state = useIconState()
@@ -33,64 +87,105 @@ export function LeftPicker() {
   const [activeLib, setActiveLib] = useState<IconLib>("lucide")
   const [query, setQuery] = useState("")
 
-  // CDN library name lists, loaded lazily on first switch
-  const [cdnNames, setCdnNames] = useState<string[]>([])
+  const provider: Provider | null =
+    activeLib in PROVIDERS ? PROVIDERS[activeLib as ProviderId] : null
+
+  // Names are keyed by the provider they belong to, so a switch never renders
+  // one provider's names mapped onto another provider's URLs (would 404).
+  const [local, setLocal] = useState<{ id: ProviderId | null; names: string[] }>({
+    id: null,
+    names: [],
+  })
+  const [remoteResults, setRemoteResults] = useState<string[]>([])
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle")
   const [uploadError, setUploadError] = useState<string | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
 
-  const isCdn = activeLib === "tabler" || activeLib === "phosphor" || activeLib === "simple"
-
+  // Local providers: load the full name list once per library (cache-aware).
   useEffect(() => {
-    if (!isCdn) {
+    if (!provider || provider.searchMode !== "local") {
       setStatus("idle")
       return
     }
     let cancelled = false
-    // Already loaded this library (memory / sessionStorage)? Show it instantly,
-    // no loading flash, no stale-names-from-other-lib flash.
-    const cached = getCachedNames(activeLib as CdnLibId)
+    const id = provider.id
+    const cached = provider.cachedAll?.()
     if (cached) {
-      setCdnNames(cached)
+      setLocal({ id, names: cached })
       setStatus("idle")
       return
     }
-    setCdnNames([]) // clear the previous library's names while fetching
+    setLocal({ id, names: [] })
     setStatus("loading")
-    fetchLibNames(activeLib as CdnLibId)
+    provider
+      .loadAll!()
       .then((names) => {
         if (cancelled) return
-        setCdnNames(names)
+        setLocal({ id, names })
         setStatus("idle")
       })
       .catch(() => {
         if (cancelled) return
         setStatus("error")
-        setCdnNames([])
+        setLocal({ id, names: [] })
       })
     return () => {
       cancelled = true
     }
-  }, [activeLib, isCdn])
+  }, [provider])
+
+  // Remote providers (Iconify): debounced search per query.
+  useEffect(() => {
+    if (!provider || provider.searchMode !== "remote") return
+    const q = query.trim()
+    if (!q) {
+      setRemoteResults([])
+      setStatus("idle")
+      return
+    }
+    setStatus("loading")
+    let cancelled = false
+    const t = setTimeout(() => {
+      provider
+        .search!(q)
+        .then((r) => {
+          if (cancelled) return
+          setRemoteResults(r)
+          setStatus("idle")
+        })
+        .catch(() => {
+          if (cancelled) return
+          setStatus("error")
+          setRemoteResults([])
+        })
+    }, 300)
+    return () => {
+      cancelled = true
+      clearTimeout(t)
+    }
+  }, [provider, query])
 
   const lucideResults = useMemo(
     () => (activeLib === "lucide" ? searchLucide(query, 120) : []),
     [activeLib, query],
   )
-  const cdnResults = useMemo(
-    () => (isCdn ? searchNames(cdnNames, query, 120) : []),
-    [isCdn, cdnNames, query],
-  )
+  const providerResults = useMemo(() => {
+    if (!provider) return []
+    if (provider.searchMode === "remote") return remoteResults
+    // only use names that belong to the active provider
+    const names = local.id === provider.id ? local.names : []
+    return searchNames(names, query, 120)
+  }, [provider, remoteResults, local, query])
 
   async function pickLucide(name: string) {
     const svg = await loadLucideGlyph(name)
     patch({ iconSource: { lib: "lucide", name, svg, viewBox: 24, paint: "stroke" } })
   }
 
-  async function pickCdn(lib: CdnLibId, name: string) {
+  async function pickProvider(p: Provider, name: string) {
     try {
-      const g = await loadCdnGlyph(lib, name)
-      patch({ iconSource: { lib, name, svg: g.svg, viewBox: g.viewBox, paint: g.paint } })
+      const g = await p.loadGlyph(name)
+      patch({ iconSource: { lib: p.id, name, svg: g.svg, viewBox: g.viewBox, paint: g.paint } })
     } catch {
       setStatus("error")
     }
@@ -120,6 +215,10 @@ export function LeftPicker() {
     })
   }
 
+  const note = provider?.note
+  const searchPlaceholder =
+    provider?.searchMode === "remote" ? "搜索 Iconify…" : "搜索图标"
+
   return (
     <div className="flex h-full min-h-0 flex-col border-r">
       <div className="flex flex-col gap-3 p-3 pb-2">
@@ -128,7 +227,7 @@ export function LeftPicker() {
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="搜索图标"
+            placeholder={searchPlaceholder}
             className="h-8 pl-8 text-xs"
             disabled={activeLib === "upload"}
           />
@@ -136,19 +235,22 @@ export function LeftPicker() {
 
         <div className="flex flex-wrap gap-1.5">
           {LIBS.map((lib) => (
-          <button
-            key={lib.id}
-            type="button"
-            onClick={() => setActiveLib(lib.id)}
-            className={cn(
-              "flex items-center gap-1 rounded-md px-2 py-1 text-[11px] transition-colors",
-              activeLib === lib.id
-                ? "bg-primary text-primary-foreground"
-                : "border text-muted-foreground hover:text-foreground",
-            )}
-          >
-            {lib.id === "upload" && <Upload className="size-3" />}
-            {lib.label}
+            <button
+              key={lib.id}
+              type="button"
+              onClick={() => {
+                setActiveLib(lib.id)
+                setQuery("")
+              }}
+              className={cn(
+                "flex items-center gap-1 rounded-md px-2 py-1 text-[11px] transition-colors",
+                activeLib === lib.id
+                  ? "bg-primary text-primary-foreground"
+                  : "border text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {lib.id === "upload" && <Upload className="size-3" />}
+              {lib.label}
             </button>
           ))}
         </div>
@@ -186,15 +288,15 @@ export function LeftPicker() {
         </div>
       ) : (
         <>
-          {(activeLib === "simple" || status !== "idle") && (
+          {(note || status !== "idle") && (
             <div className="flex flex-col gap-2 px-3 pb-2">
-              {activeLib === "simple" && (
+              {note && (
                 <p className="rounded-md bg-amber-50 p-2 text-[10px] leading-relaxed text-amber-700 dark:bg-amber-950/40 dark:text-amber-400">
-                  品牌 logo 适合 demo / 占位；正式发布产品 logo 请注意商标风险。
+                  {note}
                 </p>
               )}
               {status === "loading" && (
-                <p className="text-xs text-muted-foreground">加载图标库中…</p>
+                <p className="text-xs text-muted-foreground">加载中…</p>
               )}
               {status === "error" && (
                 <p className="text-xs text-destructive">
@@ -204,7 +306,16 @@ export function LeftPicker() {
             </div>
           )}
 
-          <div className="min-h-0 flex-1 overflow-y-auto px-3 pb-3 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border">
+          {provider?.searchMode === "remote" && !query.trim() && status === "idle" && (
+            <p className="px-3 pb-2 text-xs text-muted-foreground">
+              输入关键词搜索 20 万+ 图标。
+            </p>
+          )}
+
+          <div
+            data-grid-scroll
+            className="min-h-0 flex-1 overflow-y-auto px-3 pb-3 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border"
+          >
             <div className="grid grid-cols-4 gap-1.5">
               {activeLib === "lucide" &&
                 lucideResults.map((name) => (
@@ -224,27 +335,22 @@ export function LeftPicker() {
                   </button>
                 ))}
 
-              {isCdn &&
+              {provider &&
                 status === "idle" &&
-                cdnResults.map((name) => (
+                providerResults.map((name) => (
                   <button
                     key={name}
                     type="button"
-                    onClick={() => void pickCdn(activeLib as CdnLibId, name)}
+                    onClick={() => void pickProvider(provider, name)}
                     title={name}
                     className={cn(
                       "flex aspect-square items-center justify-center rounded-md border p-2 transition-colors hover:bg-muted",
-                      state.iconSource.lib === activeLib && state.iconSource.name === name
+                      state.iconSource.lib === provider.id && state.iconSource.name === name
                         ? "border-primary"
-                        : "",
+                        : "text-muted-foreground",
                     )}
                   >
-                    <img
-                      src={svgUrl(activeLib as CdnLibId, name)}
-                      alt={name}
-                      loading="lazy"
-                      className="size-4 dark:invert"
-                    />
+                    <IconThumb provider={provider} name={name} />
                   </button>
                 ))}
             </div>
