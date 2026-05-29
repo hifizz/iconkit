@@ -73,6 +73,8 @@ export const defaultIconState: IconState = {
     strokeSize: 0,
     strokeColor: "#000000",
   },
-  icon: { color: "#FFFFFF", size: 256, xOffset: 0, yOffset: 0 },
+  // 320 ≈ 62.5% of the 512 canvas — glyph-on-container sweet spot (Android safe
+  // zone ~61%, iOS ≥10% edge padding); ~19% padding each side.
+  icon: { color: "#FFFFFF", size: 320, xOffset: 0, yOffset: 0 },
   meta: { filename: "icon.png" },
 }
