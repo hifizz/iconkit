@@ -3,7 +3,7 @@ import { useMemo } from "react"
 import { buildMasterSVG, MASTER_SIZE } from "@/lib/render/buildMasterSVG"
 import { useIconState } from "@/state/iconStore"
 
-const PREVIEW_SIZES = [16, 24, 32, 48, 96]
+const PREVIEW_SIZES = [16, 24, 32, 48]
 
 // Heuristic: lucide glyphs are line art; very small + many subpaths reads as "dense".
 function densityHint(svg: string): boolean {

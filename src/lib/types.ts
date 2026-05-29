@@ -66,13 +66,13 @@ export const defaultIconState: IconState = {
   fill: { type: "linear", primary: "#7F77DD", secondary: "#5B51C7", angle: 135 },
   background: {
     shape: "rounded",
-    radius: 224,
+    radius: 112,
     radialGlare: true,
     noiseTexture: false,
     noiseOpacity: 15,
     strokeSize: 0,
     strokeColor: "#000000",
   },
-  icon: { color: "#FFFFFF", size: 512, xOffset: 0, yOffset: 0 },
+  icon: { color: "#FFFFFF", size: 256, xOffset: 0, yOffset: 0 },
   meta: { filename: "icon.png" },
 }

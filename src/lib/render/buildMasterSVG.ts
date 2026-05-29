@@ -1,7 +1,7 @@
 import { squirclePath } from "@/lib/presets"
 import type { IconState } from "@/lib/types"
 
-export const MASTER_SIZE = 1024
+export const MASTER_SIZE = 512
 
 /**
  * Pure: IconState -> a standalone 512x512 master SVG string. The single source
