@@ -40,20 +40,18 @@ export function CenterCanvas() {
         </div>
 
         <div className="flex items-end gap-5">
-          {PREVIEW_SIZES.map((s) => {
-            const px = Math.min(s, 64)
-            return (
-              <div key={s} className="flex flex-col items-center gap-1.5">
-                <div
-                  className="checkerboard flex items-end justify-center rounded"
-                  style={{ width: px, height: px }}
-                >
-                  <img src={dataUrl} width={px} height={px} alt={`${s}px preview`} />
-                </div>
-                <span className="text-[10px] text-muted-foreground">{s}</span>
+          {PREVIEW_SIZES.map((s) => (
+            <div key={s} className="flex flex-col items-center gap-1.5">
+              {/* true pixel size — this is the point of the multi-size preview */}
+              <div
+                className="checkerboard flex items-center justify-center rounded"
+                style={{ width: s, height: s }}
+              >
+                <img src={dataUrl} width={s} height={s} alt={`${s}px preview`} />
               </div>
-            )
-          })}
+              <span className="text-[10px] text-muted-foreground">{s}</span>
+            </div>
+          ))}
         </div>
 
         {dense && (
