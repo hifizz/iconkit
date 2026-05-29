@@ -23,10 +23,10 @@ import { rasterize } from "@/lib/render/rasterize"
 import { useIconState } from "@/state/iconStore"
 
 const TARGETS: { id: ExportTarget; label: string; desc: string }[] = [
-  { id: "favicon", label: "Favicon", desc: "网站全套 favicon + manifest + <head>" },
-  { id: "ios", label: "iOS App", desc: "1024 方形、无 alpha、不预先圆角" },
+  { id: "favicon", label: "Favicon", desc: "Full site favicon set + manifest + <head>" },
+  { id: "ios", label: "iOS App", desc: "1024 square, no alpha, no pre-rounded corners" },
   { id: "extension", label: "Extension", desc: "16/32/48/128 + manifest.json" },
-  { id: "single", label: "Single", desc: "单张 PNG，可复制图片 / SVG / dataURL" },
+  { id: "single", label: "Single", desc: "Single PNG; copy image / SVG / dataURL" },
 ]
 
 export function ExportPanel({ trigger }: { trigger: React.ReactElement }) {
@@ -102,9 +102,9 @@ export function ExportPanel({ trigger }: { trigger: React.ReactElement }) {
       <DialogTrigger render={trigger} />
       <DialogContent className="max-w-2xl sm:max-w-2xl [&>*]:min-w-0">
         <DialogHeader>
-          <DialogTitle>导出整套</DialogTitle>
+          <DialogTitle>Export All</DialogTitle>
           <DialogDescription>
-            选择目标场景，下载打包好的文件 + 可直接粘贴的配套代码。
+            Pick a target, then download the packaged files + ready-to-paste code.
           </DialogDescription>
         </DialogHeader>
 
@@ -122,16 +122,16 @@ export function ExportPanel({ trigger }: { trigger: React.ReactElement }) {
           {TARGETS.find((t) => t.id === target)?.desc}
         </p>
 
-        {error && <p className="text-xs text-destructive">导出失败：{error}</p>}
+        {error && <p className="text-xs text-destructive">Export failed: {error}</p>}
 
         {/* file list */}
         <div className="rounded-lg border">
           <div className="border-b px-3 py-2 text-xs font-medium text-muted-foreground">
-            将打包的文件
+            Files to be packaged
           </div>
           <ul className="max-h-32 overflow-auto p-2 text-xs scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border">
             {busy && !bundle ? (
-              <li className="px-1 py-0.5 text-muted-foreground">生成中…</li>
+              <li className="px-1 py-0.5 text-muted-foreground">Generating…</li>
             ) : (
               bundle?.files.map((f) => (
                 <li key={f.name} className="flex items-center gap-2 px-1 py-0.5">
@@ -165,7 +165,7 @@ export function ExportPanel({ trigger }: { trigger: React.ReactElement }) {
                 ) : (
                   <Copy className="size-3.5" />
                 )}
-                复制
+                Copy
               </Button>
             </div>
             <pre className="max-h-40 overflow-auto p-3 text-[11px] leading-relaxed break-words whitespace-pre-wrap scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border">
@@ -179,15 +179,15 @@ export function ExportPanel({ trigger }: { trigger: React.ReactElement }) {
           {target === "single" ? (
             <>
               <Button onClick={onDownloadSingle}>
-                <Download className="size-4" /> 下载 PNG
+                <Download className="size-4" /> Download PNG
               </Button>
               <Button variant="outline" onClick={onCopyImage}>
                 {copied === "image" ? <Check className="size-4" /> : <Copy className="size-4" />}
-                复制图片
+                Copy image
               </Button>
               <Button variant="outline" onClick={onCopySvg}>
                 {copied === "svg" ? <Check className="size-4" /> : <Copy className="size-4" />}
-                复制 SVG
+                Copy SVG
               </Button>
               <Button variant="outline" onClick={onCopyDataUrl}>
                 {copied === "dataurl" ? (
@@ -195,12 +195,12 @@ export function ExportPanel({ trigger }: { trigger: React.ReactElement }) {
                 ) : (
                   <Copy className="size-4" />
                 )}
-                复制 dataURL
+                Copy dataURL
               </Button>
             </>
           ) : (
             <Button onClick={onDownloadZip} disabled={busy || !bundle}>
-              <Download className="size-4" /> 下载 .zip
+              <Download className="size-4" /> Download .zip
             </Button>
           )}
         </div>

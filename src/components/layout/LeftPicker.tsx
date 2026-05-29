@@ -31,12 +31,12 @@ const LIBS: { id: IconLib; label: string }[] = [
   { id: "upload", label: "SVG" },
 ]
 
-/** Picker tab id: a real library, the upload pseudo-tab, or the cross-library "全部". */
+/** Picker tab id: a real library, the upload pseudo-tab, or the cross-library "All". */
 type TabId = IconLib | "all"
 
-const TABS: { id: TabId; label: string }[] = [{ id: "all", label: "全部" }, ...LIBS]
+const TABS: { id: TabId; label: string }[] = [{ id: "all", label: "All" }, ...LIBS]
 
-// Libraries the "全部" search spans: every local source. Remote Iconify (a 200k
+// Libraries the "All" search spans: every local source. Remote Iconify (a 200k
 // aggregator that overlaps these) and the upload pseudo-tab are excluded.
 const GLOBAL_LIBS = LIBS.filter((l) => l.id !== "iconify" && l.id !== "upload")
 
@@ -206,7 +206,7 @@ export function LeftPicker() {
     return searchNames(names, query, Infinity)
   }, [provider, remoteResults, local, query])
 
-  // "全部" mode: ensure every local library's name list is loaded (cache-aware,
+  // "All" mode: ensure every local library's name list is loaded (cache-aware,
   // so each fires its network listing at most once across the session). Groups
   // fill in progressively as lists arrive.
   useEffect(() => {
@@ -308,7 +308,7 @@ export function LeftPicker() {
   }
 
   // A single icon cell, shared by the virtualized single-library grid and the
-  // grouped "全部" view. Lucide renders via DynamicIcon; everything else via the
+  // grouped "All" view. Lucide renders via DynamicIcon; everything else via the
   // provider's (lazy) thumbnail.
   function renderCell(libId: IconLib, name: string) {
     const p = libId === "lucide" ? null : (PROVIDERS[libId as ProviderId] ?? null)
@@ -339,13 +339,13 @@ export function LeftPicker() {
   async function onUpload(file: File) {
     setUploadError(null)
     if (file.size > MAX_UPLOAD_BYTES) {
-      setUploadError("文件过大（上限 100KB）")
+      setUploadError("File too large (100KB max)")
       return
     }
     const raw = await file.text()
     const cleaned = sanitizeUploadedSvg(raw)
     if (!cleaned) {
-      setUploadError("不是合法的 SVG，或包含不允许的内容")
+      setUploadError("Not a valid SVG, or contains disallowed content")
       return
     }
     const g = normalizeSvg(cleaned)
@@ -363,10 +363,10 @@ export function LeftPicker() {
   const note = provider?.note
   const searchPlaceholder =
     activeLib === "all"
-      ? "搜索全部图标库"
+      ? "Search all libraries"
       : provider?.searchMode === "remote"
-        ? "搜索 Iconify…"
-        : "搜索图标"
+        ? "Search Iconify…"
+        : "Search icons"
 
   return (
     <div className="flex h-full min-h-0 flex-col border-r">
@@ -414,8 +414,10 @@ export function LeftPicker() {
             className="flex flex-col items-center gap-2 rounded-lg border border-dashed p-6 text-xs text-muted-foreground transition-colors hover:bg-muted"
           >
             <Upload className="size-5" />
-            点击上传 SVG 文件
-            <span className="text-[10px]">已自动清洗脚本 / 外链 / 事件属性 · 上限 100KB</span>
+            Click to upload an SVG file
+            <span className="text-[10px]">
+              Scripts / external refs / event attrs auto-sanitized · 100KB max
+            </span>
           </button>
           <input
             ref={fileRef}
@@ -431,7 +433,7 @@ export function LeftPicker() {
           {uploadError && <p className="text-[11px] text-destructive">{uploadError}</p>}
           {state.iconSource.lib === "upload" && (
             <p className="text-[11px] text-emerald-600 dark:text-emerald-500">
-              已载入：{state.iconSource.name || "uploaded.svg"}
+              Loaded: {state.iconSource.name || "uploaded.svg"}
             </p>
           )}
         </div>
@@ -445,11 +447,11 @@ export function LeftPicker() {
                 </p>
               )}
               {status === "loading" && (
-                <p className="text-xs text-muted-foreground">加载中…</p>
+                <p className="text-xs text-muted-foreground">Loading…</p>
               )}
               {status === "error" && (
                 <p className="text-xs text-destructive">
-                  该图标库暂不可用（需要网络），请稍后重试或改用 Lucide。
+                  This library is unavailable right now (needs network) — retry later or use Lucide.
                 </p>
               )}
             </div>
@@ -457,13 +459,13 @@ export function LeftPicker() {
 
           {provider?.searchMode === "remote" && !query.trim() && status === "idle" && (
             <p className="px-3 pb-2 text-xs text-muted-foreground">
-              输入关键词搜索 20 万+ 图标。
+              Type a keyword to search 200k+ icons.
             </p>
           )}
 
           {activeLib === "all" && !query.trim() && (
             <p className="px-3 pb-2 text-xs text-muted-foreground">
-              输入关键词，一次搜索全部精选图标库（不含 Iconify）。
+              Type a keyword to search all curated libraries at once (excludes Iconify).
             </p>
           )}
 
@@ -472,7 +474,7 @@ export function LeftPicker() {
             data-grid-scroll
             className="min-h-0 flex-1 overflow-y-auto px-3 pb-3 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border"
           >
-            {/* "全部"：按图标库分组展示结果 */}
+            {/* "All": results grouped by library */}
             {activeLib === "all" && query.trim() && (
               <div className="flex flex-col gap-4">
                 {groups.map((g) => (
@@ -486,7 +488,7 @@ export function LeftPicker() {
                       )}
                     </div>
                     {g.pending ? (
-                      <p className="text-[10px] text-muted-foreground/60">加载中…</p>
+                      <p className="text-[10px] text-muted-foreground/60">Loading…</p>
                     ) : (
                       <div className="grid grid-cols-4 gap-1.5">
                         {g.names.map((name) => renderCell(g.id, name))}
@@ -495,12 +497,12 @@ export function LeftPicker() {
                   </section>
                 ))}
                 {groups.length === 0 && (
-                  <p className="text-xs text-muted-foreground">没有匹配的图标。</p>
+                  <p className="text-xs text-muted-foreground">No matching icons.</p>
                 )}
               </div>
             )}
 
-            {/* 单库浏览 / 搜索：虚拟滚动 */}
+            {/* Single-library browse / search: virtualized */}
             {activeLib !== "all" && gridItems.length > 0 && (
               <div
                 className="relative w-full"

@@ -81,7 +81,8 @@ function iconifySetProvider(
   }
 }
 
-const SIMPLE_NOTE = "品牌 logo 适合 demo / 占位；正式发布产品 logo 请注意商标风险。"
+const SIMPLE_NOTE =
+  "Brand logos are fine for demos / placeholders; mind trademark risk when shipping a real product logo."
 
 export const PROVIDERS: Record<ProviderId, Provider> = {
   tabler: cdnProvider("tabler"),
@@ -92,20 +93,35 @@ export const PROVIDERS: Record<ProviderId, Provider> = {
     "material",
     "material-symbols",
     "Material",
-    "Google Material Symbols；名称后缀 -rounded / -sharp 可切换样式。",
+    "Google Material Symbols; the -rounded / -sharp name suffix switches style.",
   ),
   heroicons: iconifySetProvider("heroicons", "heroicons", "Heroicons"),
   bootstrap: iconifySetProvider("bootstrap", "bi", "Bootstrap"),
-  remix: iconifySetProvider("remix", "ri", "Remix", "line / fill 两套，名称后缀区分。"),
+  remix: iconifySetProvider(
+    "remix",
+    "ri",
+    "Remix",
+    "line / fill variants, distinguished by name suffix.",
+  ),
   solar: iconifySetProvider(
     "solar",
     "solar",
     "Solar",
-    "多字重；CC 许可，商用请注明出处。",
+    "Multiple weights; CC license, attribute when used commercially.",
   ),
   carbon: iconifySetProvider("carbon", "carbon", "Carbon", "IBM Carbon；Apache-2.0。"),
-  mdi: iconifySetProvider("mdi", "mdi", "MDI", "Material Design Icons 社区版，7000+；Apache-2.0。"),
-  octicon: iconifySetProvider("octicon", "octicon", "Octicons", "GitHub 官方图标；MIT。"),
+  mdi: iconifySetProvider(
+    "mdi",
+    "mdi",
+    "MDI",
+    "Material Design Icons (community), 7000+; Apache-2.0.",
+  ),
+  octicon: iconifySetProvider(
+    "octicon",
+    "octicon",
+    "Octicons",
+    "GitHub's official icons; MIT.",
+  ),
   iconify: {
     id: "iconify",
     label: "Iconify",
@@ -113,7 +129,7 @@ export const PROVIDERS: Record<ProviderId, Provider> = {
     search: (q) => searchIconify(q),
     thumbUrl: (id) => iconifyUrl(id),
     loadGlyph: (id) => loadIconifyGlyph(id),
-    note: "200k+ 图标聚合，输入关键词搜索（需要网络）。",
+    note: "200k+ aggregated icons; type a keyword to search (needs network).",
   },
   untitled: {
     id: "untitled",

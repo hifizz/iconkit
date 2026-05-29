@@ -217,9 +217,9 @@ export function RightControls() {
         {/* iOS background presets (new) */}
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between">
-            <GroupLabel>iOS 背景预设</GroupLabel>
+            <GroupLabel>iOS Background Presets</GroupLabel>
             <span className="rounded bg-emerald-600 px-1.5 py-0.5 text-[10px] text-white">
-              新
+              New
             </span>
           </div>
           <div className="flex flex-wrap gap-1.5">
@@ -251,7 +251,7 @@ export function RightControls() {
             ))}
           </div>
           <p className="text-[11px] leading-relaxed text-muted-foreground">
-            选中后背景切换为 iOS 超椭圆（squircle）形状。
+            When selected, the background switches to the iOS squircle shape.
           </p>
         </div>
       </div>

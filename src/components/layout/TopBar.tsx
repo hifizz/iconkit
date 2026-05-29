@@ -50,7 +50,7 @@ export function TopBar() {
           size="icon-sm"
           disabled={!canUndo}
           onClick={() => dispatch({ type: "undo" })}
-          title="撤销 (⌘Z)"
+          title="Undo (⌘Z)"
         >
           <Undo2 className="size-4" />
         </Button>
@@ -59,14 +59,14 @@ export function TopBar() {
           size="icon-sm"
           disabled={!canRedo}
           onClick={() => dispatch({ type: "redo" })}
-          title="重做 (⇧⌘Z)"
+          title="Redo (⇧⌘Z)"
         >
           <Redo2 className="size-4" />
         </Button>
         <ExportPanel
           trigger={
             <Button variant="outline" size="sm">
-              <Download className="size-4" /> 导出整套
+              <Download className="size-4" /> Export All
             </Button>
           }
         />

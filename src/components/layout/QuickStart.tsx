@@ -47,10 +47,10 @@ export function QuickStart() {
       <div className="mx-4 w-full max-w-md rounded-2xl border bg-card p-6 shadow-xl">
         <div className="mb-1 flex items-center gap-2">
           <Sparkles className="size-5 text-primary" />
-          <h2 className="text-base font-medium">几秒钟生成一个图标</h2>
+          <h2 className="text-base font-medium">Generate an icon in seconds</h2>
         </div>
         <p className="mb-4 text-xs text-muted-foreground">
-          输入项目名或关键词,自动匹配一个字形 + 一套配色。可随后继续微调或直接导出。
+          Enter a project name or keyword to auto-match a glyph + color set. Fine-tune afterward or export right away.
         </p>
         <form
           onSubmit={(e) => {
@@ -63,11 +63,11 @@ export function QuickStart() {
             autoFocus
             value={value}
             onChange={(e) => setValue(e.target.value)}
-            placeholder="例如：my chat app、analytics、coffee shop"
+            placeholder="e.g. my chat app, analytics, coffee shop"
             className="h-9"
           />
           <Button type="submit" size="lg" disabled={busy || !value.trim()}>
-            {busy ? "生成中…" : "生成"}
+            {busy ? "Generating…" : "Generate"}
           </Button>
         </form>
         <div className="mt-3 flex items-center justify-between">
@@ -88,7 +88,7 @@ export function QuickStart() {
             onClick={() => setOpen(false)}
             className="text-xs text-muted-foreground hover:text-foreground"
           >
-            跳过,自己来 →
+            Skip, I'll do it myself →
           </button>
         </div>
       </div>

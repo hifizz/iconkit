@@ -69,7 +69,7 @@ export function CenterCanvas() {
 
         {dense && (
           <p className="max-w-md text-center text-[11px] text-amber-600 dark:text-amber-500">
-            这个字形细节较多，在 16px 下可能会糊 — 可以调大图标尺寸或换个更简单的字形。
+            This glyph is detailed and may look muddy at 16px — try a larger icon size or a simpler glyph.
           </p>
         )}
       </div>
