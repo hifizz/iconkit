@@ -1,7 +1,6 @@
 import { ColorField } from "@/components/controls/ColorField"
 import { Segmented } from "@/components/controls/Segmented"
 import { SliderField } from "@/components/controls/SliderField"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { Switch } from "@/components/ui/switch"
 import { FILL_PRESETS, IOS_PRESETS } from "@/lib/presets"
@@ -27,7 +26,7 @@ export function RightControls() {
   const patch = usePatch()
 
   return (
-    <ScrollArea className="h-full border-l">
+    <div className="h-full min-h-0 overflow-y-auto border-l scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border">
       <div className="flex flex-col gap-5 p-4">
         {/* Presets */}
         <div className="flex flex-col gap-2">
@@ -238,6 +237,6 @@ export function RightControls() {
           </p>
         </div>
       </div>
-    </ScrollArea>
+    </div>
   )
 }

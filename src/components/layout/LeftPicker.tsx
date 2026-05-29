@@ -3,7 +3,6 @@ import { Search } from "lucide-react"
 import { DynamicIcon } from "lucide-react/dynamic"
 
 import { Input } from "@/components/ui/input"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { loadLucideGlyph, searchLucide } from "@/lib/icons/lucide"
 import { cn } from "@/lib/utils"
 import { usePatch, useIconState } from "@/state/iconStore"
@@ -61,7 +60,7 @@ export function LeftPicker() {
         ))}
       </div>
 
-      <ScrollArea className="-mr-1 min-h-0 flex-1 pr-1">
+      <div className="min-h-0 flex-1 overflow-y-auto pr-1 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border">
         <div className="grid grid-cols-4 gap-1.5">
           {results.map((name) => (
             <button
@@ -80,7 +79,7 @@ export function LeftPicker() {
             </button>
           ))}
         </div>
-      </ScrollArea>
+      </div>
     </div>
   )
 }

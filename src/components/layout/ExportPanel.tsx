@@ -129,7 +129,7 @@ export function ExportPanel({ trigger }: { trigger: React.ReactElement }) {
           <div className="border-b px-3 py-2 text-xs font-medium text-muted-foreground">
             将打包的文件
           </div>
-          <ul className="max-h-32 overflow-auto p-2 text-xs">
+          <ul className="max-h-32 overflow-auto p-2 text-xs scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border">
             {busy && !bundle ? (
               <li className="px-1 py-0.5 text-muted-foreground">生成中…</li>
             ) : (
@@ -168,7 +168,7 @@ export function ExportPanel({ trigger }: { trigger: React.ReactElement }) {
                 复制
               </Button>
             </div>
-            <pre className="max-h-40 overflow-auto p-3 text-[11px] leading-relaxed">
+            <pre className="max-h-40 overflow-auto p-3 text-[11px] leading-relaxed scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border">
               <code>{s.code}</code>
             </pre>
           </div>
