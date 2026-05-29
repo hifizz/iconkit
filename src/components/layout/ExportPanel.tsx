@@ -100,7 +100,7 @@ export function ExportPanel({ trigger }: { trigger: React.ReactElement }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger render={trigger} />
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl sm:max-w-2xl [&>*]:min-w-0">
         <DialogHeader>
           <DialogTitle>导出整套</DialogTitle>
           <DialogDescription>
@@ -168,7 +168,7 @@ export function ExportPanel({ trigger }: { trigger: React.ReactElement }) {
                 复制
               </Button>
             </div>
-            <pre className="max-h-40 overflow-auto p-3 text-[11px] leading-relaxed scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border">
+            <pre className="max-h-40 overflow-auto p-3 text-[11px] leading-relaxed break-words whitespace-pre-wrap scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border">
               <code>{s.code}</code>
             </pre>
           </div>
