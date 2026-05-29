@@ -1,3 +1,5 @@
+import { useState } from "react"
+
 import { CenterCanvas } from "@/components/layout/CenterCanvas"
 import { LeftPicker } from "@/components/layout/LeftPicker"
 import { QuickStart } from "@/components/layout/QuickStart"
@@ -7,12 +9,13 @@ import { TooltipProvider } from "@/components/ui/tooltip"
 import { IconStoreProvider } from "@/state/iconStore"
 
 export function App() {
+  const [quickStartOpen, setQuickStartOpen] = useState(false)
   return (
     <TooltipProvider>
       <IconStoreProvider>
         <div className="relative flex h-svh flex-col overflow-hidden bg-background text-foreground">
-          <QuickStart />
-          <TopBar />
+          <QuickStart open={quickStartOpen} onClose={() => setQuickStartOpen(false)} />
+          <TopBar onQuickStart={() => setQuickStartOpen(true)} />
           <div className="grid min-h-0 flex-1 grid-cols-[230px_minmax(0,1fr)_300px] grid-rows-[minmax(0,1fr)]">
             <LeftPicker />
             <main className="min-h-0 overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border">

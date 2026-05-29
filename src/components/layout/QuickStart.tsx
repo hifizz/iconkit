@@ -8,9 +8,9 @@ import { FILL_PRESETS } from "@/lib/presets"
 import { matchKeyword, slugifyFilename } from "@/lib/quickstart"
 import { usePatch } from "@/state/iconStore"
 
-export function QuickStart() {
+/** Opt-in quick-start dialog. Opened on demand from the top bar (not auto-shown). */
+export function QuickStart({ open, onClose }: { open: boolean; onClose: () => void }) {
   const patch = usePatch()
-  const [open, setOpen] = useState(true)
   const [value, setValue] = useState("")
   const [busy, setBusy] = useState(false)
 
@@ -39,12 +39,19 @@ export function QuickStart() {
       meta: { filename: `${slugifyFilename(keyword)}.png` },
     })
     setBusy(false)
-    setOpen(false)
+    setValue("")
+    onClose()
   }
 
   return (
-    <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
-      <div className="mx-4 w-full max-w-md rounded-2xl border bg-card p-6 shadow-xl">
+    <div
+      className="absolute inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="mx-4 w-full max-w-md rounded-2xl border bg-card p-6 shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="mb-1 flex items-center gap-2">
           <Sparkles className="size-5 text-primary" />
           <h2 className="text-base font-medium">Generate an icon in seconds</h2>
@@ -85,7 +92,7 @@ export function QuickStart() {
           </div>
           <button
             type="button"
-            onClick={() => setOpen(false)}
+            onClick={onClose}
             className="text-xs text-muted-foreground hover:text-foreground"
           >
             Skip, I'll do it myself →

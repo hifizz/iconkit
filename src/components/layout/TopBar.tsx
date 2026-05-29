@@ -1,5 +1,5 @@
 import { useEffect } from "react"
-import { Download, Redo2, Squircle, Undo2 } from "lucide-react"
+import { Download, Redo2, Sparkles, Squircle, Undo2 } from "lucide-react"
 
 import { ExportPanel } from "@/components/layout/ExportPanel"
 import { Button } from "@/components/ui/button"
@@ -11,7 +11,7 @@ import {
   useIconState,
 } from "@/state/iconStore"
 
-export function TopBar() {
+export function TopBar({ onQuickStart }: { onQuickStart: () => void }) {
   const state = useIconState()
   const dispatch = useIconDispatch()
   const patch = usePatch()
@@ -45,6 +45,9 @@ export function TopBar() {
       </div>
 
       <div className="flex items-center gap-1.5">
+        <Button variant="ghost" size="sm" onClick={onQuickStart} title="Quick start">
+          <Sparkles className="size-4" /> Quick start
+        </Button>
         <Button
           variant="ghost"
           size="icon-sm"
