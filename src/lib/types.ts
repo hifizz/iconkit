@@ -9,8 +9,12 @@ export type IconState = {
   iconSource: {
     lib: IconLib
     name: string
-    /** Normalized inner glyph markup in a 24x24 coordinate space (no <svg> wrapper). */
+    /** Normalized inner glyph markup (no <svg> wrapper). */
     svg: string
+    /** Native square viewBox edge (e.g. 24 for Lucide/Tabler, 256 for Phosphor). */
+    viewBox: number
+    /** How the glyph is painted: line icons use stroke, filled/brand icons use fill. */
+    paint: "stroke" | "fill"
   }
   fill: {
     type: FillType
@@ -44,7 +48,13 @@ export const ROCKET_GLYPH =
   '<path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 .05 5 .05"/>'
 
 export const defaultIconState: IconState = {
-  iconSource: { lib: "lucide", name: "rocket", svg: ROCKET_GLYPH },
+  iconSource: {
+    lib: "lucide",
+    name: "rocket",
+    svg: ROCKET_GLYPH,
+    viewBox: 24,
+    paint: "stroke",
+  },
   fill: { type: "linear", primary: "#7F77DD", secondary: "#5B51C7", angle: 135 },
   background: {
     shape: "rounded",

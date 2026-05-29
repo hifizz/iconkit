@@ -1,5 +1,6 @@
 import { CenterCanvas } from "@/components/layout/CenterCanvas"
 import { LeftPicker } from "@/components/layout/LeftPicker"
+import { QuickStart } from "@/components/layout/QuickStart"
 import { RightControls } from "@/components/layout/RightControls"
 import { TopBar } from "@/components/layout/TopBar"
 import { TooltipProvider } from "@/components/ui/tooltip"
@@ -9,7 +10,8 @@ export function App() {
   return (
     <TooltipProvider>
       <IconStoreProvider>
-        <div className="flex h-svh flex-col overflow-hidden bg-background text-foreground">
+        <div className="relative flex h-svh flex-col overflow-hidden bg-background text-foreground">
+          <QuickStart />
           <TopBar />
           <div className="grid min-h-0 flex-1 grid-cols-[230px_minmax(0,1fr)_300px] grid-rows-[minmax(0,1fr)]">
             <LeftPicker />

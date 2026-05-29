@@ -72,6 +72,25 @@ describe("buildMasterSVG", () => {
     expect(svg).not.toContain("url(#noise)")
   })
 
+  it("paints fill icons with fill (no stroke) and scales by their viewBox", () => {
+    const svg = buildMasterSVG({
+      ...base,
+      icon: { ...base.icon, size: 256, xOffset: 0, yOffset: 0 },
+      iconSource: {
+        lib: "phosphor",
+        name: "heart",
+        svg: '<path d="M1 1"/>',
+        viewBox: 256,
+        paint: "fill",
+      },
+    })
+    // scale = 256/256 = 1, centered at 128
+    expect(svg).toContain('transform="translate(128 128) scale(1)"')
+    expect(svg).toContain(`fill="${base.icon.color}"`)
+    // the glyph group itself should not carry a stroke paint
+    expect(svg).not.toContain('stroke-width="2"')
+  })
+
   it("snapshot: default state", () => {
     expect(buildMasterSVG(base)).toMatchSnapshot()
   })

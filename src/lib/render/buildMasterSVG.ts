@@ -68,8 +68,9 @@ export function buildMasterSVG(state: IconState): string {
   // clip path so glare/noise stay inside the shape
   defs.push(`<clipPath id="clip">${shapeEl("")}</clipPath>`)
 
-  // --- glyph transform: native 24x24 -> icon.size, centered + offset ---
-  const scale = icon.size / 24
+  // --- glyph transform: native viewBox -> icon.size, centered + offset ---
+  const viewBox = iconSource.viewBox || 24
+  const scale = icon.size / viewBox
   const tx = S / 2 - icon.size / 2 + icon.xOffset
   const ty = S / 2 - icon.size / 2 + icon.yOffset
 
@@ -94,11 +95,15 @@ export function buildMasterSVG(state: IconState): string {
       shapeEl(`fill="none" stroke="${background.strokeColor}" stroke-width="${background.strokeSize}"`),
     )
   }
-  // glyph (stroke-width:2 stays inside scaled group so it scales with the glyph)
+  // glyph: stroke icons paint with stroke (width:2 inside the scaled group so it
+  // scales with the glyph); filled/brand icons paint with fill.
+  const glyphPaint =
+    iconSource.paint === "fill"
+      ? `fill="${icon.color}"`
+      : `fill="none" stroke="${icon.color}" stroke-width="2" ` +
+        `stroke-linecap="round" stroke-linejoin="round"`
   layers.push(
-    `<g transform="translate(${tx} ${ty}) scale(${scale})" ` +
-      `fill="none" stroke="${icon.color}" stroke-width="2" ` +
-      `stroke-linecap="round" stroke-linejoin="round">${iconSource.svg}</g>`,
+    `<g transform="translate(${tx} ${ty}) scale(${scale})" ${glyphPaint}>${iconSource.svg}</g>`,
   )
 
   return (

@@ -35,6 +35,10 @@ export async function loadLucideGlyph(name: string): Promise<string> {
   return inner
 }
 
+/** Lucide glyphs are 24-viewBox stroke icons. */
+export const LUCIDE_VIEWBOX = 24
+export const LUCIDE_PAINT = "stroke" as const
+
 /** Fuzzy-ish filter by substring; returns up to `limit` names. */
 export function searchLucide(query: string, limit = 120): string[] {
   const q = query.trim().toLowerCase()
