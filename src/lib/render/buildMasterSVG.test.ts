@@ -10,10 +10,10 @@ describe("buildMasterSVG", () => {
     expect(buildMasterSVG(base)).toBe(buildMasterSVG(base))
   })
 
-  it("produces a 512 viewBox svg", () => {
+  it("produces a 1024 viewBox svg", () => {
     const svg = buildMasterSVG(base)
     expect(svg.startsWith("<svg")).toBe(true)
-    expect(svg).toContain('viewBox="0 0 512 512"')
+    expect(svg).toContain('viewBox="0 0 1024 1024"')
   })
 
   it("computes the glyph transform from size + offset", () => {
@@ -21,8 +21,8 @@ describe("buildMasterSVG", () => {
       ...base,
       icon: { ...base.icon, size: 240, xOffset: 0, yOffset: 0 },
     }
-    // scale = 240/24 = 10, tx = ty = 256 - 120 = 136
-    expect(buildMasterSVG(state)).toContain('transform="translate(136 136) scale(10)"')
+    // scale = 240/24 = 10, tx = ty = 512 - 120 = 392 (canvas center 512)
+    expect(buildMasterSVG(state)).toContain('transform="translate(392 392) scale(10)"')
   })
 
   it("keeps lucide fidelity attrs on the glyph group", () => {
@@ -54,7 +54,7 @@ describe("buildMasterSVG", () => {
       ...base,
       background: { ...base.background, shape: "squircle" },
     })
-    expect(svg).toContain('<path d="M512 256')
+    expect(svg).toContain('<path d="M1024.00 512.00')
     expect(svg).not.toContain("rx=")
   })
 
@@ -84,8 +84,8 @@ describe("buildMasterSVG", () => {
         paint: "fill",
       },
     })
-    // scale = 256/256 = 1, centered at 128
-    expect(svg).toContain('transform="translate(128 128) scale(1)"')
+    // scale = 256/256 = 1, centered at 512 - 128 = 384 (canvas center 512)
+    expect(svg).toContain('transform="translate(384 384) scale(1)"')
     expect(svg).toContain(`fill="${base.icon.color}"`)
     // the glyph group itself should not carry a stroke paint
     expect(svg).not.toContain('stroke-width="2"')

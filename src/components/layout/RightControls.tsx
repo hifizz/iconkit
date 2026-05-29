@@ -4,9 +4,16 @@ import { SliderField } from "@/components/controls/SliderField"
 import { Separator } from "@/components/ui/separator"
 import { Switch } from "@/components/ui/switch"
 import { FILL_PRESETS, IOS_PRESETS } from "@/lib/presets"
+import { MASTER_SIZE } from "@/lib/render/buildMasterSVG"
 import type { BackgroundShape, FillType } from "@/lib/types"
 import { cn } from "@/lib/utils"
 import { usePatch, useIconState } from "@/state/iconStore"
+
+// Control ranges derive from the canvas size so they scale if MASTER_SIZE changes.
+const RADIUS_MAX = MASTER_SIZE / 2
+const STROKE_MAX = Math.round(MASTER_SIZE / 16)
+const ICON_MIN = Math.round(MASTER_SIZE / 12)
+const OFFSET_MAX = Math.round(MASTER_SIZE * 0.4)
 
 function GroupLabel({ children }: { children: React.ReactNode }) {
   return (
@@ -110,7 +117,7 @@ export function RightControls() {
               label="Radius"
               value={state.background.radius}
               min={0}
-              max={256}
+              max={RADIUS_MAX}
               suffix="px"
               onChange={(radius) => patch({ background: { radius } }, "bg.radius")}
             />
@@ -145,7 +152,7 @@ export function RightControls() {
             label="Stroke size"
             value={state.background.strokeSize}
             min={0}
-            max={32}
+            max={STROKE_MAX}
             suffix="px"
             onChange={(strokeSize) => patch({ background: { strokeSize } }, "bg.stroke")}
           />
@@ -171,24 +178,24 @@ export function RightControls() {
           <SliderField
             label="Size"
             value={state.icon.size}
-            min={48}
-            max={512}
+            min={ICON_MIN}
+            max={MASTER_SIZE}
             suffix="px"
             onChange={(size) => patch({ icon: { size } }, "icon.size")}
           />
           <SliderField
             label="X offset"
             value={state.icon.xOffset}
-            min={-200}
-            max={200}
+            min={-OFFSET_MAX}
+            max={OFFSET_MAX}
             suffix="px"
             onChange={(xOffset) => patch({ icon: { xOffset } }, "icon.x")}
           />
           <SliderField
             label="Y offset"
             value={state.icon.yOffset}
-            min={-200}
-            max={200}
+            min={-OFFSET_MAX}
+            max={OFFSET_MAX}
             suffix="px"
             onChange={(yOffset) => patch({ icon: { yOffset } }, "icon.y")}
           />

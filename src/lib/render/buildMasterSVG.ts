@@ -1,7 +1,7 @@
-import { SQUIRCLE_PATH_512 } from "@/lib/presets"
+import { squirclePath } from "@/lib/presets"
 import type { IconState } from "@/lib/types"
 
-export const MASTER_SIZE = 512
+export const MASTER_SIZE = 1024
 
 /**
  * Pure: IconState -> a standalone 512x512 master SVG string. The single source
@@ -20,7 +20,7 @@ export function buildMasterSVG(state: IconState): string {
   // --- background shape element (without paint attrs) ---
   const shapeEl = (extra: string) =>
     background.shape === "squircle"
-      ? `<path d="${SQUIRCLE_PATH_512}" ${extra}/>`
+      ? `<path d="${squirclePath(S)}" ${extra}/>`
       : `<rect x="0" y="0" width="${S}" height="${S}" rx="${background.radius}" ry="${background.radius}" ${extra}/>`
 
   // --- fill paint ---

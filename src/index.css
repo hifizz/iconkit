@@ -83,6 +83,7 @@
     --sidebar-accent-foreground: oklch(0.205 0 0);
     --sidebar-border: oklch(0.922 0 0);
     --sidebar-ring: oklch(0.708 0 0);
+    --checker: rgba(0, 0, 0, 0.06);
 }
 
 .dark {
@@ -117,6 +118,19 @@
     --sidebar-accent-foreground: oklch(0.985 0 0);
     --sidebar-border: oklch(1 0 0 / 10%);
     --sidebar-ring: oklch(0.556 0 0);
+    --checker: rgba(255, 255, 255, 0.07);
+}
+
+/* Transparency checkerboard backdrop. Uses --checker so it stays visible in
+   both light and dark mode (light squares on dark, dark squares on light). */
+.checkerboard {
+    background-image:
+        linear-gradient(45deg, var(--checker) 25%, transparent 25%),
+        linear-gradient(-45deg, var(--checker) 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, var(--checker) 75%),
+        linear-gradient(-45deg, transparent 75%, var(--checker) 75%);
+    background-size: 24px 24px;
+    background-position: 0 0, 0 12px, 12px -12px, -12px 0;
 }
 
 @layer base {
