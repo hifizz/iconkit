@@ -39,25 +39,36 @@ export function RightControls() {
         <div className="flex flex-col gap-2">
           <GroupLabel>Presets</GroupLabel>
           <div className="flex flex-wrap gap-1.5">
-            {FILL_PRESETS.map((p) => (
-              <button
-                key={p.id}
-                type="button"
-                title={p.id}
-                onClick={() =>
-                  patch({
-                    fill: {
-                      type: p.type,
-                      primary: p.primary,
-                      secondary: p.secondary,
-                      angle: p.angle,
-                    },
-                  })
-                }
-                className="size-6 rounded-md ring-offset-2 ring-offset-background transition hover:ring-2 hover:ring-ring"
-                style={previewStyle(p)}
-              />
-            ))}
+            {FILL_PRESETS.map((p) => {
+              const active =
+                state.fill.type === p.type &&
+                state.fill.primary.toUpperCase() === p.primary.toUpperCase() &&
+                (p.type === "solid" ||
+                  state.fill.secondary.toUpperCase() === p.secondary.toUpperCase())
+              return (
+                <button
+                  key={p.id}
+                  type="button"
+                  title={p.id}
+                  aria-pressed={active}
+                  onClick={() =>
+                    patch({
+                      fill: {
+                        type: p.type,
+                        primary: p.primary,
+                        secondary: p.secondary,
+                        angle: p.angle,
+                      },
+                    })
+                  }
+                  className={cn(
+                    "size-6 rounded-md ring-offset-2 ring-offset-background transition hover:ring-2 hover:ring-ring",
+                    active && "ring-2 ring-foreground",
+                  )}
+                  style={previewStyle(p)}
+                />
+              )
+            })}
           </div>
         </div>
 
