@@ -66,7 +66,7 @@ export function QuickStart() {
             placeholder="例如：my chat app、analytics、coffee shop"
             className="h-9"
           />
-          <Button type="submit" disabled={busy || !value.trim()}>
+          <Button type="submit" size="lg" disabled={busy || !value.trim()}>
             {busy ? "生成中…" : "生成"}
           </Button>
         </form>
