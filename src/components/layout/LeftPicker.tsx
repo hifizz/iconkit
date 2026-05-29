@@ -4,7 +4,7 @@ import { DynamicIcon } from "lucide-react/dynamic"
 import { useVirtualizer } from "@tanstack/react-virtual"
 
 import { Input } from "@/components/ui/input"
-import { loadLucideGlyph, searchLucide } from "@/lib/icons/lucide"
+import { loadLucideGlyph, lucideNames, searchLucide } from "@/lib/icons/lucide"
 import { normalizeSvg, sanitizeUploadedSvg, type NormalizedGlyph } from "@/lib/icons/normalize"
 import { PROVIDERS, type Provider, type ProviderId } from "@/lib/icons/providers"
 import { searchNames } from "@/lib/icons/registry"
@@ -31,7 +31,23 @@ const LIBS: { id: IconLib; label: string }[] = [
   { id: "upload", label: "SVG" },
 ]
 
+/** Picker tab id: a real library, the upload pseudo-tab, or the cross-library "全部". */
+type TabId = IconLib | "all"
+
+const TABS: { id: TabId; label: string }[] = [{ id: "all", label: "全部" }, ...LIBS]
+
+// Libraries the "全部" search spans: every local source. Remote Iconify (a 200k
+// aggregator that overlaps these) and the upload pseudo-tab are excluded.
+const GLOBAL_LIBS = LIBS.filter((l) => l.id !== "iconify" && l.id !== "upload")
+
+/** Names for a global-search library: lucide is bundled; the rest come from the cache map. */
+function namesForLib(id: IconLib, loaded: Record<string, string[]>): string[] | null {
+  if (id === "lucide") return lucideNames
+  return loaded[id] ?? null
+}
+
 const MAX_UPLOAD_BYTES = 100 * 1024
+const PER_GROUP = 24
 
 /** Inline SVG markup for a thumbnail rendered from a parsed glyph (no img URL). */
 function inlineThumb(g: NormalizedGlyph): string {
@@ -93,8 +109,10 @@ function IconThumb({ provider, name }: { provider: Provider; name: string }) {
 export function LeftPicker() {
   const state = useIconState()
   const patch = usePatch()
-  const [activeLib, setActiveLib] = useState<IconLib>("lucide")
+  const [activeLib, setActiveLib] = useState<TabId>("all")
   const [query, setQuery] = useState("")
+  // Cross-library search: each local library's full name list, filled lazily.
+  const [globalNames, setGlobalNames] = useState<Record<string, string[]>>({})
 
   const provider: Provider | null =
     activeLib in PROVIDERS ? PROVIDERS[activeLib as ProviderId] : null
@@ -188,6 +206,51 @@ export function LeftPicker() {
     return searchNames(names, query, Infinity)
   }, [provider, remoteResults, local, query])
 
+  // "全部" mode: ensure every local library's name list is loaded (cache-aware,
+  // so each fires its network listing at most once across the session). Groups
+  // fill in progressively as lists arrive.
+  useEffect(() => {
+    if (activeLib !== "all") return
+    let cancelled = false
+    for (const { id } of GLOBAL_LIBS) {
+      if (id === "lucide") continue // bundled, always available
+      const p = PROVIDERS[id as ProviderId]
+      if (!p?.loadAll) continue
+      const cached = p.cachedAll?.()
+      if (cached) {
+        setGlobalNames((s) => (s[id] ? s : { ...s, [id]: cached }))
+        continue
+      }
+      p.loadAll()
+        .then((names) => {
+          if (!cancelled) setGlobalNames((s) => ({ ...s, [id]: names }))
+        })
+        .catch(() => {})
+    }
+    return () => {
+      cancelled = true
+    }
+  }, [activeLib])
+
+  // Grouped cross-library results: one block per library, each capped.
+  const groups = useMemo(() => {
+    if (activeLib !== "all") return []
+    const q = query.trim()
+    if (!q) return []
+    return GLOBAL_LIBS.map(({ id, label }) => {
+      const names = namesForLib(id, globalNames)
+      if (!names) return { id, label, names: [] as string[], more: false, pending: true }
+      const matches = searchNames(names, q, PER_GROUP + 1)
+      return {
+        id,
+        label,
+        names: matches.slice(0, PER_GROUP),
+        more: matches.length > PER_GROUP,
+        pending: false,
+      }
+    }).filter((g) => g.pending || g.names.length > 0)
+  }, [activeLib, query, globalNames])
+
   // Unified grid items for the active library (lucide or any provider).
   const gridItems = useMemo(() => {
     if (activeLib === "lucide") return lucideResults
@@ -244,6 +307,35 @@ export function LeftPicker() {
     }
   }
 
+  // A single icon cell, shared by the virtualized single-library grid and the
+  // grouped "全部" view. Lucide renders via DynamicIcon; everything else via the
+  // provider's (lazy) thumbnail.
+  function renderCell(libId: IconLib, name: string) {
+    const p = libId === "lucide" ? null : (PROVIDERS[libId as ProviderId] ?? null)
+    const selected =
+      state.iconSource.lib === libId && state.iconSource.name === name
+    return (
+      <button
+        key={`${libId}:${name}`}
+        type="button"
+        onClick={() =>
+          libId === "lucide" ? void pickLucide(name) : p && void pickProvider(p, name)
+        }
+        title={name}
+        className={cn(
+          "flex aspect-square items-center justify-center rounded-md p-2 transition-colors",
+          selected ? "bg-primary/20 text-foreground" : "text-muted-foreground hover:bg-muted",
+        )}
+      >
+        {libId === "lucide" ? (
+          <DynamicIcon name={name as never} size={16} />
+        ) : (
+          p && <IconThumb provider={p} name={name} />
+        )}
+      </button>
+    )
+  }
+
   async function onUpload(file: File) {
     setUploadError(null)
     if (file.size > MAX_UPLOAD_BYTES) {
@@ -270,7 +362,11 @@ export function LeftPicker() {
 
   const note = provider?.note
   const searchPlaceholder =
-    provider?.searchMode === "remote" ? "搜索 Iconify…" : "搜索图标"
+    activeLib === "all"
+      ? "搜索全部图标库"
+      : provider?.searchMode === "remote"
+        ? "搜索 Iconify…"
+        : "搜索图标"
 
   return (
     <div className="flex h-full min-h-0 flex-col border-r">
@@ -287,7 +383,7 @@ export function LeftPicker() {
         </div>
 
         <div className="flex flex-wrap gap-1.5">
-          {LIBS.map((lib) => (
+          {TABS.map((lib) => (
             <button
               key={lib.id}
               type="button"
@@ -365,12 +461,47 @@ export function LeftPicker() {
             </p>
           )}
 
+          {activeLib === "all" && !query.trim() && (
+            <p className="px-3 pb-2 text-xs text-muted-foreground">
+              输入关键词，一次搜索全部精选图标库（不含 Iconify）。
+            </p>
+          )}
+
           <div
             ref={scrollRef}
             data-grid-scroll
             className="min-h-0 flex-1 overflow-y-auto px-3 pb-3 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border"
           >
-            {gridItems.length > 0 && (
+            {/* "全部"：按图标库分组展示结果 */}
+            {activeLib === "all" && query.trim() && (
+              <div className="flex flex-col gap-4">
+                {groups.map((g) => (
+                  <section key={g.id}>
+                    <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-medium text-foreground">
+                      <span>{g.label}</span>
+                      {!g.pending && (
+                        <span className="text-muted-foreground/60">
+                          {g.more ? `${g.names.length}+` : g.names.length}
+                        </span>
+                      )}
+                    </div>
+                    {g.pending ? (
+                      <p className="text-[10px] text-muted-foreground/60">加载中…</p>
+                    ) : (
+                      <div className="grid grid-cols-4 gap-1.5">
+                        {g.names.map((name) => renderCell(g.id, name))}
+                      </div>
+                    )}
+                  </section>
+                ))}
+                {groups.length === 0 && (
+                  <p className="text-xs text-muted-foreground">没有匹配的图标。</p>
+                )}
+              </div>
+            )}
+
+            {/* 单库浏览 / 搜索：虚拟滚动 */}
+            {activeLib !== "all" && gridItems.length > 0 && (
               <div
                 className="relative w-full"
                 style={{ height: rowVirtualizer.getTotalSize() }}
@@ -384,35 +515,7 @@ export function LeftPicker() {
                       className="absolute top-0 left-0 grid w-full grid-cols-4 gap-1.5"
                       style={{ transform: `translateY(${vRow.start}px)` }}
                     >
-                      {rowNames.map((name) => {
-                        const selected =
-                          state.iconSource.lib === activeLib &&
-                          state.iconSource.name === name
-                        return (
-                          <button
-                            key={name}
-                            type="button"
-                            onClick={() =>
-                              activeLib === "lucide"
-                                ? void pickLucide(name)
-                                : provider && void pickProvider(provider, name)
-                            }
-                            title={name}
-                            className={cn(
-                              "flex aspect-square items-center justify-center rounded-md p-2 transition-colors",
-                              selected
-                                ? "bg-primary/20 text-foreground"
-                                : "text-muted-foreground hover:bg-muted",
-                            )}
-                          >
-                            {activeLib === "lucide" ? (
-                              <DynamicIcon name={name as never} size={16} />
-                            ) : (
-                              provider && <IconThumb provider={provider} name={name} />
-                            )}
-                          </button>
-                        )
-                      })}
+                      {rowNames.map((name) => renderCell(activeLib as IconLib, name))}
                     </div>
                   )
                 })}

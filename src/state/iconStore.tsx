@@ -1,6 +1,7 @@
 import {
   createContext,
   useContext,
+  useEffect,
   useReducer,
   type Dispatch,
   type ReactNode,
@@ -45,6 +46,47 @@ type History = {
   future: IconState[]
   lastKey?: string
   lastTs: number
+}
+
+// ---- persistence ------------------------------------------------------------
+// The whole history (present + undo/redo stacks) survives a page refresh, so a
+// reload keeps the chosen icon and lets you undo actions from before the reload.
+// IconState is plain data (the glyph is just an svg string) → JSON round-trips.
+
+const STORAGE_KEY = "iconkit:history:v1"
+const EMPTY_HISTORY: History = {
+  past: [],
+  present: defaultIconState,
+  future: [],
+  lastTs: 0,
+}
+
+function loadHistory(): History {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY)
+    if (!raw) return EMPTY_HISTORY
+    const parsed = JSON.parse(raw) as Partial<History>
+    if (!parsed || typeof parsed.present !== "object" || !parsed.present) {
+      return EMPTY_HISTORY
+    }
+    return {
+      // Merge over defaults so a state saved by an older shape still hydrates.
+      past: Array.isArray(parsed.past) ? parsed.past : [],
+      present: deepMerge(defaultIconState, parsed.present),
+      future: Array.isArray(parsed.future) ? parsed.future : [],
+      lastTs: 0,
+    }
+  } catch {
+    return EMPTY_HISTORY
+  }
+}
+
+function saveHistory(history: History): void {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(history))
+  } catch {
+    // ignore quota / unavailable
+  }
 }
 
 export type IconAction =
@@ -126,12 +168,14 @@ const DispatchCtx = createContext<Dispatch<IconAction> | null>(null)
 const HistoryCtx = createContext<{ canUndo: boolean; canRedo: boolean } | null>(null)
 
 export function IconStoreProvider({ children }: { children: ReactNode }) {
-  const [history, dispatch] = useReducer(reducer, {
-    past: [],
-    present: defaultIconState,
-    future: [],
-    lastTs: 0,
-  })
+  const [history, dispatch] = useReducer(reducer, undefined, loadHistory)
+
+  // Persist on every change so a refresh restores both the icon and the
+  // undo/redo stacks.
+  useEffect(() => {
+    saveHistory(history)
+  }, [history])
+
   return (
     <StateCtx.Provider value={history.present}>
       <DispatchCtx.Provider value={dispatch}>

@@ -35,8 +35,21 @@ export function CenterCanvas() {
 
       {/* bottom bar: readout + multi-size strip, on a solid panel for legibility */}
       <div className="flex flex-col items-center gap-3 border-t bg-background/80 px-6 py-4 backdrop-blur-sm">
-        <div className="text-xs text-muted-foreground">
-          {MASTER_SIZE} × {MASTER_SIZE}
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <span>
+            {MASTER_SIZE} × {MASTER_SIZE}
+          </span>
+          {state.iconSource.name && (
+            <>
+              <span className="text-border">·</span>
+              {/* Selected glyph id — handy to recall when searching again later. */}
+              <span className="font-mono">
+                <span className="text-muted-foreground/70">{state.iconSource.lib}</span>
+                <span className="text-muted-foreground/70"> / </span>
+                <span className="text-foreground">{state.iconSource.name}</span>
+              </span>
+            </>
+          )}
         </div>
 
         <div className="flex items-end gap-5">
