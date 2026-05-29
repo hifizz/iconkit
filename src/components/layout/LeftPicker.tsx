@@ -333,10 +333,10 @@ export function LeftPicker() {
                     onClick={() => void pickLucide(name)}
                     title={name}
                     className={cn(
-                      "flex aspect-square items-center justify-center rounded-md border transition-colors hover:bg-muted",
+                      "flex aspect-square items-center justify-center rounded-md transition-colors",
                       state.iconSource.lib === "lucide" && state.iconSource.name === name
-                        ? "border-primary text-foreground"
-                        : "text-muted-foreground",
+                        ? "bg-primary/20 text-foreground"
+                        : "text-muted-foreground hover:bg-muted",
                     )}
                   >
                     <DynamicIcon name={name as never} size={16} />
@@ -352,10 +352,10 @@ export function LeftPicker() {
                     onClick={() => void pickProvider(provider, name)}
                     title={name}
                     className={cn(
-                      "flex aspect-square items-center justify-center rounded-md border p-2 transition-colors hover:bg-muted",
+                      "flex aspect-square items-center justify-center rounded-md p-2 transition-colors",
                       state.iconSource.lib === provider.id && state.iconSource.name === name
-                        ? "border-primary"
-                        : "text-muted-foreground",
+                        ? "bg-primary/20 text-foreground"
+                        : "text-muted-foreground hover:bg-muted",
                     )}
                   >
                     <IconThumb provider={provider} name={name} />
