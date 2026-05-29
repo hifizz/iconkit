@@ -22,10 +22,15 @@ export type ProviderId =
   | "simple"
   | "feather"
   | "material"
+  | "heroicons"
+  | "bootstrap"
+  | "remix"
+  | "solar"
+  | "carbon"
+  | "mdi"
+  | "octicon"
   | "iconify"
   | "untitled"
-
-const MATERIAL_PREFIX = "material-symbols"
 
 export type Provider = {
   id: ProviderId
@@ -57,6 +62,25 @@ function cdnProvider(id: CdnLibId, note?: string): Provider {
   }
 }
 
+/** A browsable first-class tab backed by a single Iconify collection (prefix). */
+function iconifySetProvider(
+  id: ProviderId,
+  prefix: string,
+  label: string,
+  note?: string,
+): Provider {
+  return {
+    id,
+    label,
+    searchMode: "local",
+    loadAll: () => fetchIconifyCollection(prefix),
+    cachedAll: () => getCachedIconifyCollection(prefix),
+    thumbUrl: (name) => iconifyUrl(`${prefix}:${name}`),
+    loadGlyph: (name) => loadIconifyGlyph(`${prefix}:${name}`),
+    note,
+  }
+}
+
 const SIMPLE_NOTE = "品牌 logo 适合 demo / 占位；正式发布产品 logo 请注意商标风险。"
 
 export const PROVIDERS: Record<ProviderId, Provider> = {
@@ -64,16 +88,24 @@ export const PROVIDERS: Record<ProviderId, Provider> = {
   phosphor: cdnProvider("phosphor"),
   simple: cdnProvider("simple", SIMPLE_NOTE),
   feather: cdnProvider("feather"),
-  material: {
-    id: "material",
-    label: "Material",
-    searchMode: "local",
-    loadAll: () => fetchIconifyCollection(MATERIAL_PREFIX),
-    cachedAll: () => getCachedIconifyCollection(MATERIAL_PREFIX),
-    thumbUrl: (name) => iconifyUrl(`${MATERIAL_PREFIX}:${name}`),
-    loadGlyph: (name) => loadIconifyGlyph(`${MATERIAL_PREFIX}:${name}`),
-    note: "Google Material Symbols；名称后缀 -rounded / -sharp 可切换样式。",
-  },
+  material: iconifySetProvider(
+    "material",
+    "material-symbols",
+    "Material",
+    "Google Material Symbols；名称后缀 -rounded / -sharp 可切换样式。",
+  ),
+  heroicons: iconifySetProvider("heroicons", "heroicons", "Heroicons"),
+  bootstrap: iconifySetProvider("bootstrap", "bi", "Bootstrap"),
+  remix: iconifySetProvider("remix", "ri", "Remix", "line / fill 两套，名称后缀区分。"),
+  solar: iconifySetProvider(
+    "solar",
+    "solar",
+    "Solar",
+    "多字重；CC 许可，商用请注明出处。",
+  ),
+  carbon: iconifySetProvider("carbon", "carbon", "Carbon", "IBM Carbon；Apache-2.0。"),
+  mdi: iconifySetProvider("mdi", "mdi", "MDI", "Material Design Icons 社区版，7000+；Apache-2.0。"),
+  octicon: iconifySetProvider("octicon", "octicon", "Octicons", "GitHub 官方图标；MIT。"),
   iconify: {
     id: "iconify",
     label: "Iconify",
