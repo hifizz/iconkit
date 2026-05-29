@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import { Search, Upload } from "lucide-react"
 import { DynamicIcon } from "lucide-react/dynamic"
+import { useVirtualizer } from "@tanstack/react-virtual"
 
 import { Input } from "@/components/ui/input"
 import { loadLucideGlyph, searchLucide } from "@/lib/icons/lucide"
@@ -173,8 +174,10 @@ export function LeftPicker() {
     }
   }, [provider, query])
 
+  // No row cap: the grid is virtualized (only visible rows mount), so the full
+  // collection — Solar/MDI have 7k+ — can flow in without flooding the DOM/CDN.
   const lucideResults = useMemo(
-    () => (activeLib === "lucide" ? searchLucide(query, 120) : []),
+    () => (activeLib === "lucide" ? searchLucide(query, Infinity) : []),
     [activeLib, query],
   )
   const providerResults = useMemo(() => {
@@ -182,8 +185,50 @@ export function LeftPicker() {
     if (provider.searchMode === "remote") return remoteResults
     // only use names that belong to the active provider
     const names = local.id === provider.id ? local.names : []
-    return searchNames(names, query, 120)
+    return searchNames(names, query, Infinity)
   }, [provider, remoteResults, local, query])
+
+  // Unified grid items for the active library (lucide or any provider).
+  const gridItems = useMemo(() => {
+    if (activeLib === "lucide") return lucideResults
+    if (provider && status === "idle") return providerResults
+    return []
+  }, [activeLib, provider, status, lucideResults, providerResults])
+
+  // Row virtualization. The left panel is a fixed-width column; a 4-col grid of
+  // square cells means row height = cell width + gap, measured off the scroll
+  // container so it tracks any width change.
+  const GRID_COLS = 4
+  const GRID_GAP = 6 // gap-1.5 = 0.375rem
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const [rowHeight, setRowHeight] = useState(53)
+  useEffect(() => {
+    const el = scrollRef.current
+    if (!el) return
+    const measure = () => {
+      const content = el.clientWidth - 24 // px-3 both sides
+      if (content <= 0) return
+      const cell = (content - (GRID_COLS - 1) * GRID_GAP) / GRID_COLS
+      setRowHeight(Math.round(cell + GRID_GAP))
+    }
+    measure()
+    const ro = new ResizeObserver(measure)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+
+  const rowCount = Math.ceil(gridItems.length / GRID_COLS)
+  const rowVirtualizer = useVirtualizer({
+    count: rowCount,
+    getScrollElement: () => scrollRef.current,
+    estimateSize: () => rowHeight,
+    overscan: 6,
+  })
+  useEffect(() => rowVirtualizer.measure(), [rowHeight, rowVirtualizer])
+  // Reset scroll to the top when the visible set changes (library / query).
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: 0 })
+  }, [activeLib, query])
 
   async function pickLucide(name: string) {
     const svg = await loadLucideGlyph(name)
@@ -321,47 +366,58 @@ export function LeftPicker() {
           )}
 
           <div
+            ref={scrollRef}
             data-grid-scroll
             className="min-h-0 flex-1 overflow-y-auto px-3 pb-3 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border"
           >
-            <div className="grid grid-cols-4 gap-1.5">
-              {activeLib === "lucide" &&
-                lucideResults.map((name) => (
-                  <button
-                    key={name}
-                    type="button"
-                    onClick={() => void pickLucide(name)}
-                    title={name}
-                    className={cn(
-                      "flex aspect-square items-center justify-center rounded-md transition-colors",
-                      state.iconSource.lib === "lucide" && state.iconSource.name === name
-                        ? "bg-primary/20 text-foreground"
-                        : "text-muted-foreground hover:bg-muted",
-                    )}
-                  >
-                    <DynamicIcon name={name as never} size={16} />
-                  </button>
-                ))}
-
-              {provider &&
-                status === "idle" &&
-                providerResults.map((name) => (
-                  <button
-                    key={name}
-                    type="button"
-                    onClick={() => void pickProvider(provider, name)}
-                    title={name}
-                    className={cn(
-                      "flex aspect-square items-center justify-center rounded-md p-2 transition-colors",
-                      state.iconSource.lib === provider.id && state.iconSource.name === name
-                        ? "bg-primary/20 text-foreground"
-                        : "text-muted-foreground hover:bg-muted",
-                    )}
-                  >
-                    <IconThumb provider={provider} name={name} />
-                  </button>
-                ))}
-            </div>
+            {gridItems.length > 0 && (
+              <div
+                className="relative w-full"
+                style={{ height: rowVirtualizer.getTotalSize() }}
+              >
+                {rowVirtualizer.getVirtualItems().map((vRow) => {
+                  const start = vRow.index * GRID_COLS
+                  const rowNames = gridItems.slice(start, start + GRID_COLS)
+                  return (
+                    <div
+                      key={vRow.key}
+                      className="absolute top-0 left-0 grid w-full grid-cols-4 gap-1.5"
+                      style={{ transform: `translateY(${vRow.start}px)` }}
+                    >
+                      {rowNames.map((name) => {
+                        const selected =
+                          state.iconSource.lib === activeLib &&
+                          state.iconSource.name === name
+                        return (
+                          <button
+                            key={name}
+                            type="button"
+                            onClick={() =>
+                              activeLib === "lucide"
+                                ? void pickLucide(name)
+                                : provider && void pickProvider(provider, name)
+                            }
+                            title={name}
+                            className={cn(
+                              "flex aspect-square items-center justify-center rounded-md p-2 transition-colors",
+                              selected
+                                ? "bg-primary/20 text-foreground"
+                                : "text-muted-foreground hover:bg-muted",
+                            )}
+                          >
+                            {activeLib === "lucide" ? (
+                              <DynamicIcon name={name as never} size={16} />
+                            ) : (
+                              provider && <IconThumb provider={provider} name={name} />
+                            )}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  )
+                })}
+              </div>
+            )}
           </div>
         </>
       )}
