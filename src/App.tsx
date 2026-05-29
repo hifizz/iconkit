@@ -1,20 +1,26 @@
-import { Button } from "@/components/ui/button"
+import { CenterCanvas } from "@/components/layout/CenterCanvas"
+import { LeftPicker } from "@/components/layout/LeftPicker"
+import { RightControls } from "@/components/layout/RightControls"
+import { TopBar } from "@/components/layout/TopBar"
+import { TooltipProvider } from "@/components/ui/tooltip"
+import { IconStoreProvider } from "@/state/iconStore"
 
 export function App() {
   return (
-    <div className="flex min-h-svh p-6">
-      <div className="flex max-w-md min-w-0 flex-col gap-4 text-sm leading-loose">
-        <div>
-          <h1 className="font-medium">Project ready!</h1>
-          <p>You may now add components and start building.</p>
-          <p>We&apos;ve already added the button component for you.</p>
-          <Button className="mt-2">Button</Button>
+    <TooltipProvider>
+      <IconStoreProvider>
+        <div className="flex h-svh flex-col overflow-hidden bg-background text-foreground">
+          <TopBar />
+          <div className="grid min-h-0 flex-1 grid-cols-[230px_minmax(0,1fr)_300px]">
+            <LeftPicker />
+            <main className="min-h-0 overflow-auto">
+              <CenterCanvas />
+            </main>
+            <RightControls />
+          </div>
         </div>
-        <div className="font-mono text-xs text-muted-foreground">
-          (Press <kbd>d</kbd> to toggle dark mode)
-        </div>
-      </div>
-    </div>
+      </IconStoreProvider>
+    </TooltipProvider>
   )
 }
 
