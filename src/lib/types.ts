@@ -7,6 +7,7 @@ export type IconLib =
   | "phosphor"
   | "simple"
   | "feather"
+  | "material"
   | "iconify"
   | "untitled"
   | "upload"

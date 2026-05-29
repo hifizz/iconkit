@@ -17,6 +17,7 @@ const LIBS: { id: IconLib; label: string }[] = [
   { id: "phosphor", label: "Phosphor" },
   { id: "feather", label: "Feather" },
   { id: "simple", label: "Simple" },
+  { id: "material", label: "Material" },
   { id: "untitled", label: "Untitled UI" },
   { id: "iconify", label: "Iconify" },
   { id: "upload", label: "SVG" },

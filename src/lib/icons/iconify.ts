@@ -15,6 +15,56 @@ export function iconifyUrl(id: string): string {
   return `${API}/${prefix}/${name}.svg`
 }
 
+type CollectionResponse = {
+  uncategorized?: string[]
+  categories?: Record<string, string[]>
+}
+
+/** Flatten an Iconify /collection response into a sorted, de-duped name list. */
+export function collectionNames(json: CollectionResponse): string[] {
+  const names = [
+    ...(json.uncategorized ?? []),
+    ...Object.values(json.categories ?? {}).flat(),
+  ]
+  return [...new Set(names)].sort()
+}
+
+const collectionCache = new Map<string, string[]>()
+const collectionKey = (prefix: string) => `iconkit:names:iconify:${prefix}`
+
+/** Synchronously return a cached Iconify collection name list, or null. */
+export function getCachedIconifyCollection(prefix: string): string[] | null {
+  const mem = collectionCache.get(prefix)
+  if (mem) return mem
+  try {
+    const stored = sessionStorage.getItem(collectionKey(prefix))
+    if (stored) {
+      const parsed = JSON.parse(stored) as string[]
+      collectionCache.set(prefix, parsed)
+      return parsed
+    }
+  } catch {
+    // ignore
+  }
+  return null
+}
+
+/** Fetch every icon name in an Iconify collection (e.g. "material-symbols"). */
+export async function fetchIconifyCollection(prefix: string): Promise<string[]> {
+  const cached = getCachedIconifyCollection(prefix)
+  if (cached) return cached
+  const res = await fetch(`${API}/collection?prefix=${encodeURIComponent(prefix)}`)
+  if (!res.ok) throw new Error(`iconify collection failed: ${res.status}`)
+  const names = collectionNames((await res.json()) as CollectionResponse)
+  collectionCache.set(prefix, names)
+  try {
+    sessionStorage.setItem(collectionKey(prefix), JSON.stringify(names))
+  } catch {
+    // ignore quota / unavailable
+  }
+  return names
+}
+
 /** Search Iconify for icon ids matching a query. */
 export async function searchIconify(query: string, limit = 120): Promise<string[]> {
   const q = query.trim()

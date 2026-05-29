@@ -1,4 +1,10 @@
-import { iconifyUrl, loadIconifyGlyph, searchIconify } from "./iconify"
+import {
+  fetchIconifyCollection,
+  getCachedIconifyCollection,
+  iconifyUrl,
+  loadIconifyGlyph,
+  searchIconify,
+} from "./iconify"
 import type { NormalizedGlyph } from "./normalize"
 import {
   CDN_LIBS,
@@ -15,8 +21,11 @@ export type ProviderId =
   | "phosphor"
   | "simple"
   | "feather"
+  | "material"
   | "iconify"
   | "untitled"
+
+const MATERIAL_PREFIX = "material-symbols"
 
 export type Provider = {
   id: ProviderId
@@ -55,6 +64,16 @@ export const PROVIDERS: Record<ProviderId, Provider> = {
   phosphor: cdnProvider("phosphor"),
   simple: cdnProvider("simple", SIMPLE_NOTE),
   feather: cdnProvider("feather"),
+  material: {
+    id: "material",
+    label: "Material",
+    searchMode: "local",
+    loadAll: () => fetchIconifyCollection(MATERIAL_PREFIX),
+    cachedAll: () => getCachedIconifyCollection(MATERIAL_PREFIX),
+    thumbUrl: (name) => iconifyUrl(`${MATERIAL_PREFIX}:${name}`),
+    loadGlyph: (name) => loadIconifyGlyph(`${MATERIAL_PREFIX}:${name}`),
+    note: "Google Material Symbols；名称后缀 -rounded / -sharp 可切换样式。",
+  },
   iconify: {
     id: "iconify",
     label: "Iconify",

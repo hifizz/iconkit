@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { iconifyUrl } from "./iconify"
+import { collectionNames, iconifyUrl } from "./iconify"
 import { searchNames } from "./registry"
 import { parseUntitledComponent } from "./untitled"
 
@@ -21,6 +21,25 @@ describe("iconifyUrl", () => {
     expect(iconifyUrl("feather:rocket")).toBe(
       "https://api.iconify.design/feather/rocket.svg",
     )
+    expect(iconifyUrl("material-symbols:home-rounded")).toBe(
+      "https://api.iconify.design/material-symbols/home-rounded.svg",
+    )
+  })
+})
+
+describe("collectionNames", () => {
+  it("flattens uncategorized + categories, de-dupes and sorts", () => {
+    const out = collectionNames({
+      uncategorized: ["home", "star"],
+      categories: { Action: ["star", "settings"], AV: ["play"] },
+    })
+    expect(out).toEqual(["home", "play", "settings", "star"])
+  })
+  it("handles a collection with only categories", () => {
+    expect(collectionNames({ categories: { A: ["b", "a"] } })).toEqual(["a", "b"])
+  })
+  it("handles an empty response", () => {
+    expect(collectionNames({})).toEqual([])
   })
 })
 
