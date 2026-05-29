@@ -51,6 +51,28 @@ export function svgUrl(lib: CdnLibId, name: string): string {
 const namesCache = new Map<CdnLibId, string[]>()
 
 /**
+ * Synchronously return the cached name list for a library if we already have it
+ * (memory, or a prior session in sessionStorage). Lets the picker skip the
+ * loading flash when revisiting a library. Returns null if not yet loaded.
+ */
+export function getCachedNames(lib: CdnLibId): string[] | null {
+  const mem = namesCache.get(lib)
+  if (mem) return mem
+  const c = CDN_LIBS[lib]
+  try {
+    const stored = sessionStorage.getItem(`iconkit:names:${c.pkg}@${c.version}`)
+    if (stored) {
+      const parsed = JSON.parse(stored) as string[]
+      namesCache.set(lib, parsed)
+      return parsed
+    }
+  } catch {
+    // ignore
+  }
+  return null
+}
+
+/**
  * Fetch the list of icon names for a CDN library via jsDelivr's flat file
  * listing. Cached in memory + sessionStorage. Throws on network failure so the
  * caller can fall back to Lucide (prd.md §6).

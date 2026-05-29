@@ -7,6 +7,7 @@ import { loadLucideGlyph, searchLucide } from "@/lib/icons/lucide"
 import { sanitizeUploadedSvg, normalizeSvg } from "@/lib/icons/normalize"
 import {
   fetchLibNames,
+  getCachedNames,
   loadCdnGlyph,
   searchNames,
   svgUrl,
@@ -41,8 +42,20 @@ export function LeftPicker() {
   const isCdn = activeLib === "tabler" || activeLib === "phosphor" || activeLib === "simple"
 
   useEffect(() => {
-    if (!isCdn) return
+    if (!isCdn) {
+      setStatus("idle")
+      return
+    }
     let cancelled = false
+    // Already loaded this library (memory / sessionStorage)? Show it instantly,
+    // no loading flash, no stale-names-from-other-lib flash.
+    const cached = getCachedNames(activeLib as CdnLibId)
+    if (cached) {
+      setCdnNames(cached)
+      setStatus("idle")
+      return
+    }
+    setCdnNames([]) // clear the previous library's names while fetching
     setStatus("loading")
     fetchLibNames(activeLib as CdnLibId)
       .then((names) => {
@@ -108,20 +121,21 @@ export function LeftPicker() {
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-3 border-r p-3">
-      <div className="relative">
-        <Search className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="搜索图标"
-          className="h-8 pl-8 text-xs"
-          disabled={activeLib === "upload"}
-        />
-      </div>
+    <div className="flex h-full min-h-0 flex-col border-r">
+      <div className="flex flex-col gap-3 p-3 pb-2">
+        <div className="relative">
+          <Search className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="搜索图标"
+            className="h-8 pl-8 text-xs"
+            disabled={activeLib === "upload"}
+          />
+        </div>
 
-      <div className="flex flex-wrap gap-1.5">
-        {LIBS.map((lib) => (
+        <div className="flex flex-wrap gap-1.5">
+          {LIBS.map((lib) => (
           <button
             key={lib.id}
             type="button"
@@ -135,13 +149,14 @@ export function LeftPicker() {
           >
             {lib.id === "upload" && <Upload className="size-3" />}
             {lib.label}
-          </button>
-        ))}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Upload panel */}
       {activeLib === "upload" ? (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2 px-3 pb-3">
           <button
             type="button"
             onClick={() => fileRef.current?.click()}
@@ -171,22 +186,25 @@ export function LeftPicker() {
         </div>
       ) : (
         <>
-          {activeLib === "simple" && (
-            <p className="rounded-md bg-amber-50 p-2 text-[10px] leading-relaxed text-amber-700 dark:bg-amber-950/40 dark:text-amber-400">
-              品牌 logo 适合 demo / 占位；正式发布产品 logo 请注意商标风险。
-            </p>
+          {(activeLib === "simple" || status !== "idle") && (
+            <div className="flex flex-col gap-2 px-3 pb-2">
+              {activeLib === "simple" && (
+                <p className="rounded-md bg-amber-50 p-2 text-[10px] leading-relaxed text-amber-700 dark:bg-amber-950/40 dark:text-amber-400">
+                  品牌 logo 适合 demo / 占位；正式发布产品 logo 请注意商标风险。
+                </p>
+              )}
+              {status === "loading" && (
+                <p className="text-xs text-muted-foreground">加载图标库中…</p>
+              )}
+              {status === "error" && (
+                <p className="text-xs text-destructive">
+                  该图标库暂不可用（需要网络），请稍后重试或改用 Lucide。
+                </p>
+              )}
+            </div>
           )}
 
-          {status === "loading" && (
-            <p className="px-1 text-xs text-muted-foreground">加载图标库中…</p>
-          )}
-          {status === "error" && (
-            <p className="px-1 text-xs text-destructive">
-              该图标库暂不可用（需要网络），请稍后重试或改用 Lucide。
-            </p>
-          )}
-
-          <div className="min-h-0 flex-1 overflow-y-auto pr-1 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border">
+          <div className="min-h-0 flex-1 overflow-y-auto px-3 pb-3 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border">
             <div className="grid grid-cols-4 gap-1.5">
               {activeLib === "lucide" &&
                 lucideResults.map((name) => (
